@@ -1,0 +1,56 @@
+<!-- socketIO config node, will aim to maintain the information for the context of nodes socketIo in and out-->
+<script type="text/javascript">
+  RED.nodes.registerType('socketio-config', {
+    category: 'config',
+    defaults: {
+      port: { value: 80, required: true, validate: RED.validators.number() },
+      sendClient: { value: true },
+      path: { value: "/socket.io" },
+      bindToNode: { value: false }
+    },
+    label: function () {
+      return this.bindToNode ? "socketIO server bind to Node-red" : "socketIO server at " + this.port;
+    },
+    oneditprepare: function () {
+      $("#node-config-input-bindToNode").change(function () {
+        if ($(this).is(":checked")) {
+          $("#node-row-bindToNode").hide();
+        }
+        else {
+          $("#node-row-bindToNode").show();
+        }
+      });
+      if (this.bindToNode) {
+        $("#node-config-input-bindToNode").prop('checked', true);
+      } else {
+        $("#node-config-input-bindToNode").prop('checked', false);
+      }
+      $("#node-config-input-bindToNode").change();
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="socketio-config">
+  <div class="form-row">
+  <input type="checkbox" id="node-config-input-bindToNode" style="display: inline-block; width: auto; vertical-align: top;">
+  <label for="node-config-input-bindToNode" style="width: auto"> Bind to Node-red Instance</label>
+  <div id="node-row-bindToNode" class="hide">
+    <label for="node-config-input-port"><i class="fa fa-terminal"></i> Port</label>
+    <input type="text" id="node-config-input-port">
+  </div>
+  </div>
+<div class="form-row">
+  <label for="node-config-input-sendClient"><i class="fa fa-share-square-o"></i> Serve client js file?</label>
+  <input type="text" id="node-config-input-sendClient">
+</div>
+<div class="form-row">
+  <label for="node-config-input-path"><i class="fa fa-paper-plane-o"></i> InputPath?</label>
+  <input type="text" id="node-config-input-path" placeholder="/socket.io">
+</div>
+
+</script>
+
+<script type="text/x-red" data-help-name="socketio-config">
+ <p>Socket IO node</p>
+ <p>VUOTO</p>
+</script>
