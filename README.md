@@ -2,6 +2,6 @@
 Implementation for [Node-RED](https://nodered.org/) of the popular [Socket.IO](http://socket.io/).
 
 ## Installation
-To install node-red-ctb-socketio use this command
+To install node-red-contrib-socketio-srv use this command
 
-`npm i node-red-ctb-socketio`
+`npm i node-red-contrib-socketio-srv`

@@ -1,5 +1,5 @@
 {
-  "name": "node-red-ctb-socket-io",
+  "name": "node-red-contrib-socketio-srv",
   "version": "1.0.2",
   "description": "Implementation for Node-RED of a SocketIO Sever",
   "dependencies": {
@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AndersondaCampo/node-red-ctb-socket-io.git"
+    "url": "git+https://github.com/AndersondaCampo/node-red-contrib-socketio-srv.git"
   },
   "keywords": [
     "node-red"
@@ -28,7 +28,7 @@
   "author": "Anderson da Campo",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/AndersondaCampo/node-red-ctb-socket-io/issues"
+    "url": "https://github.com/AndersondaCampo/node-red-contrib-socketio-srv/issues"
   },
-  "homepage": "https://github.com/AndersondaCampo/node-red-ctb-socket-io#readme"
+  "homepage": "https://github.com/AndersondaCampo/node-red-contrib-socketio-srv#readme"
 }
