@@ -54,3 +54,82 @@
  <p>Socket IO node</p>
  <p>VUOTO</p>
 </script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('socketio-in', {
+    category: "SocketIO",
+    color: "rgb(0, 230, 184)",
+    defaults: {
+      name: { value: "" },
+      server: { value: "", required: true, type: "socketio-config" },
+      rules: { value: [{ v: "" }] }
+    },
+    inputs: 0,
+    outputs: 1,
+    icon: "bridge.png",
+    label: function () {
+      return this.name || "SocketIO IN";
+    },
+    oneditprepare: function () {
+      var node = this;
+      $("#node-input-rule-container").css('min-height', '250px').css('min-width', '450px').editableList({
+        sortable: true,
+        removable: true,
+        addItem: function (container, i, opt) {
+          if (!opt.hasOwnProperty('r')) {
+            opt.r = { v: "" };
+          }
+          var row = $('<div/>').appendTo(container);
+          var label = $('<label/>', { for: "node-input-rule-value-" + i, style: "margin-left: 3px;" }).text("Topic " + i).appendTo(row);
+          var valueField = $('<input/>', { class: "node-input-rule-value", type: "text", style: "margin-left: 5px;" }).appendTo(row);
+          valueField.val(opt.r.v);
+        }
+      });
+      for (var i = 0; i < this.rules.length; i++) {
+        var rule = this.rules[i];
+        $("#node-input-rule-container").editableList('addItem', { r: rule, i: i });
+      }
+    },
+    oneditsave: function () {
+      var rules = $("#node-input-rule-container").editableList('items');
+      var node = this;
+      node.rules = [];
+      rules.each(function (i) {
+        var ruleData = $(this).data('data');
+        var rule = $(this);
+        var r = {};
+        r.v = rule.find(".node-input-rule-value").val();
+        node.rules.push(r);
+      });
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="socketio-in">
+  <div class="form-row">
+      <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+<div class="form-row">
+      <label for="node-input-server"><i class="fa fa-tag"></i> Server</label>
+      <input type="text" id="node-input-server">
+  </div>
+<div class="form-row node-input-rule-container-row">
+      <ol id="node-input-rule-container"></ol>
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="socketio-in">
+ <p>Socket IO Input node</p>
+ <p>Implementation of a SocketIO server</p>
+ <p>This node can be used to receive socket events from a web page</p>
+ <br />
+ <p>This node output:</p>
+ <p><code>msg.payload</code> as <i>Object</i> = event data received</p>
+ <p><code>msg.socketIOEvent</code> as <i>String</i> = event type received</p>
+ <p><code>msg.socketIOId</code> as <i>String</i> = socket id that generated the event</p>
+ <p><code>msg.socketIOStaticProperties</code> as <i>Object</i> = User defined properties added to the socket</p>
+ <br />
+ <p>The user can add all the topic/event he want</p>
+ <p>The predefined <code>connect/disconnect</code> etc... events are automatically implemented</p>
+</script>
