@@ -133,3 +133,50 @@
  <p>The user can add all the topic/event he want</p>
  <p>The predefined <code>connect/disconnect</code> etc... events are automatically implemented</p>
 </script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('socketio-out', {
+    category: "SocketIO",
+    color: "rgb(0, 230, 184)",
+    defaults: {
+      name: { value: "" },
+      server: { value: "", required: true, type: "socketio-config" }
+    },
+    inputs: 1,
+    outputs: 0,
+    icon: "bridge.png",
+    label: function () {
+      return this.name || "SocketIO OUT";
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="socketio-out">
+  <div class="form-row">
+      <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+<div class="form-row">
+      <label for="node-input-server"><i class="fa fa-tag"></i> Server</label>
+      <input type="text" id="node-input-server">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="socketio-out">
+ <p>Socket IO Output node</p>
+ <p>Implementation of a SocketIO server</p>
+ <p>This node can be used to send socket event from a web page</p>
+ <br />
+ <p>This node accepts on input:</p>
+ <p><code>msg.payload</code> as <i>Object</i> = event data to send</p>
+ <p><code>msg.socketIOEvent</code> as <i>String</i> = event type to send</p>
+ <p><code>msg.socketIOId</code> as <i>String</i> = socket id for sending option</p>
+ <p><code>msg.socketIOEmit</code> as <i>String</i> = socket emit type:</p>
+ <p>&nbsp;&nbsp; possibilities are :</p>
+ <p>&nbsp;&nbsp;<code>broadcast.emit</code> as <i>String</i> = send to all sockets except this socket</p>
+ <p>&nbsp;&nbsp;<code>emit</code> as <i>String</i> = send only to this socket</p>
+ <p>&nbsp;&nbsp;<code>room</code> as <i>String</i> = send to everyone in <code>msg.room</code></p>
+ <p>&nbsp;&nbsp; not defined = send to all sockets</p>
+ <p><code>msg.socketIOAddStaticProperties</code> as <i>Object</i> = User defined properties to add to the socket (if already defined they will be overwriten)</p>
+ <br />
+</script>

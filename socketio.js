@@ -19,6 +19,7 @@ module.exports = function (RED) {
       io.path(node.path);
       io.listen(node.port);
     }
+
     var bindOn = this.bindToNode
       ? "bind to Node-red port"
       : "on port " + this.port;
@@ -58,6 +59,7 @@ module.exports = function (RED) {
       socket.on(val.v, function (msgin) {
         var msg = {};
         RED.util.setMessageProperty(msg, "payload", msgin, true);
+        RED.util.setMessageProperty(msg, "socketIO", io, true);
         RED.util.setMessageProperty(msg, "socketIOEvent", val.v, true);
         RED.util.setMessageProperty(msg, "socketIOId", socket.id, true);
         if (
@@ -80,14 +82,82 @@ module.exports = function (RED) {
         addListener(socket, val, i);
       });
       //Adding support for all other special messages
-      node.specialIOEvent.forEach(function (val, i) {
-        addListener(socket, val, i);
-      });
+      // node.specialIOEvent.forEach(function (val, i) {
+      //   addListener(socket, val, i);
+      // });
+    });
+  }
+
+  function socketIoOut(n) {
+    RED.nodes.createNode(this, n);
+    var node = this;
+    this.name = n.name;
+    this.server = RED.nodes.getNode(n.server);
+
+    node.on("input", function (msg) {
+      //check if we need to add properties
+      if (RED.util.getMessageProperty(msg, "socketIOAddStaticProperties")) {
+        //check if we have already added some properties for this socket
+        if (
+          customProperties[RED.util.getMessageProperty(msg, "socketIOId")] !=
+          null
+        ) {
+          //check if object as property
+          var keys = Object.getOwnPropertyNames(
+            RED.util.getMessageProperty(msg, "socketIOAddStaticProperties")
+          );
+          var tmp =
+            customProperties[RED.util.getMessageProperty(msg, "socketIOId")];
+          for (var i = 0; i < keys.length; i++) {
+            tmp[keys[i]] = RED.util.getMessageProperty(
+              msg,
+              "socketIOAddStaticProperties"
+            )[keys[i]];
+          }
+        } else {
+          //add new properties
+          customProperties[
+            RED.util.getMessageProperty(msg, "socketIOId")
+          ] = RED.util.getMessageProperty(msg, "socketIOAddStaticProperties");
+        }
+      }
+
+      switch (RED.util.getMessageProperty(msg, "socketIOEmit")) {
+        case "broadcast.emit":
+          //Return to all but the caller
+          if (
+            io.sockets.sockets.get(RED.util.getMessageProperty(msg, "socketIOId"))
+          ) {
+            io.sockets.sockets.get(
+              RED.util.getMessageProperty(msg, "socketIOId")
+            ).broadcast.emit(msg.socketIOEvent, msg.payload);
+          }
+          break;
+        case "emit":
+          //Return only to the caller
+          if (
+            io.sockets.sockets.get(RED.util.getMessageProperty(msg, "socketIOId"))
+          ) {
+            io.sockets.sockets.get(
+              RED.util.getMessageProperty(msg, "socketIOId")
+            ).emit(msg.socketIOEvent, msg.payload);
+          }
+          break;
+        case "room":
+          //emit to all
+          if (msg.room) {
+            io.to(msg.room).emit(msg.socketIOEvent, msg.payload);
+          }
+          break;
+        default:
+          //emit to all
+          io.emit(msg.socketIOEvent, msg.payload);
+      }
     });
   }
 
 
-
   RED.nodes.registerType("socketio-config", socketIoConfig);
   RED.nodes.registerType("socketio-in", socketIoIn);
+  RED.nodes.registerType("socketio-out", socketIoOut);
 }
