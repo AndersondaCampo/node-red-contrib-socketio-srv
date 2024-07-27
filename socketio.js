@@ -55,37 +55,39 @@ module.exports = function (RED) {
       { v: "disconnect" }
     ];
 
+    function emitREDMessage(val, msgin) {
+      var msg = {};
+      RED.util.setMessageProperty(msg, "payload", msgin, true);
+      RED.util.setMessageProperty(msg, "socketIOServer", io, true);
+      RED.util.setMessageProperty(msg, "socketIOEvent", val.v, true);
+      RED.util.setMessageProperty(msg, "socketIOId", socket.id, true);
+      RED.util.setMessageProperty(msg, "socketIO", socket, true);
+      if (
+        customProperties[RED.util.getMessageProperty(msg, "socketIOId")] !=
+        null
+      ) {
+        RED.util.setMessageProperty(
+          msg,
+          "socketIOStaticProperties",
+          customProperties[RED.util.getMessageProperty(msg, "socketIOId")],
+          true
+        );
+      }
+      node.send(msg);
+    }
+
     function addListener(socket, val, i) {
       socket.on(val.v, function (msgin) {
-        var msg = {};
-        RED.util.setMessageProperty(msg, "payload", msgin, true);
-        RED.util.setMessageProperty(msg, "socketIOServer", io, true);
-        RED.util.setMessageProperty(msg, "socketIOEvent", val.v, true);
-        RED.util.setMessageProperty(msg, "socketIOId", socket.id, true);
-        RED.util.setMessageProperty(msg, "socketIO", socket, true);
-        if (
-          customProperties[RED.util.getMessageProperty(msg, "socketIOId")] !=
-          null
-        ) {
-          RED.util.setMessageProperty(
-            msg,
-            "socketIOStaticProperties",
-            customProperties[RED.util.getMessageProperty(msg, "socketIOId")],
-            true
-          );
-        }
-        node.send(msg);
+        emitREDMessage(val, msgin, i);
       });
     }
 
     io.on("connection", function (socket) {
       node.rules.forEach(function (val, i) {
-        addListener(socket, val, i);
+        addListener(socket, val);
       });
-      //Adding support for all other special messages
-      // node.specialIOEvent.forEach(function (val, i) {
-      //   addListener(socket, val, i);
-      // });
+
+      emitREDMessage({ v: "connect" }, null);
     });
   }
 
