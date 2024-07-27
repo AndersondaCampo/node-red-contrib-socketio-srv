@@ -59,9 +59,10 @@ module.exports = function (RED) {
       socket.on(val.v, function (msgin) {
         var msg = {};
         RED.util.setMessageProperty(msg, "payload", msgin, true);
-        RED.util.setMessageProperty(msg, "socketIO", io, true);
+        RED.util.setMessageProperty(msg, "socketIOServer", io, true);
         RED.util.setMessageProperty(msg, "socketIOEvent", val.v, true);
         RED.util.setMessageProperty(msg, "socketIOId", socket.id, true);
+        RED.util.setMessageProperty(msg, "socketIO", socket, true);
         if (
           customProperties[RED.util.getMessageProperty(msg, "socketIOId")] !=
           null
