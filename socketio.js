@@ -62,21 +62,13 @@ module.exports = function (RED) {
       RED.util.setMessageProperty(msg, "socketIOEvent", val.v, true);
       RED.util.setMessageProperty(msg, "socketIOId", socket.id, true);
       RED.util.setMessageProperty(msg, "socketIO", socket, true);
-      if (
-        customProperties[RED.util.getMessageProperty(msg, "socketIOId")] !=
-        null
-      ) {
-        RED.util.setMessageProperty(
-          msg,
-          "socketIOStaticProperties",
-          customProperties[RED.util.getMessageProperty(msg, "socketIOId")],
-          true
-        );
-      }
       node.send(msg);
     }
 
     function addListener(socket, val, i) {
+      // after add, remove all listeners
+      socket.removeAllListeners(val.v);
+
       socket.on(val.v, function (msgin) {
         emitREDMessage(val, msgin, i);
       });
@@ -98,69 +90,70 @@ module.exports = function (RED) {
     this.server = RED.nodes.getNode(n.server);
 
     node.on("input", function (msg) {
-      //check if we need to add properties
-      if (RED.util.getMessageProperty(msg, "socketIOAddStaticProperties")) {
-        //check if we have already added some properties for this socket
-        if (
-          customProperties[RED.util.getMessageProperty(msg, "socketIOId")] !=
-          null
-        ) {
-          //check if object as property
-          var keys = Object.getOwnPropertyNames(
-            RED.util.getMessageProperty(msg, "socketIOAddStaticProperties")
-          );
-          var tmp =
-            customProperties[RED.util.getMessageProperty(msg, "socketIOId")];
-          for (var i = 0; i < keys.length; i++) {
-            tmp[keys[i]] = RED.util.getMessageProperty(
-              msg,
-              "socketIOAddStaticProperties"
-            )[keys[i]];
-          }
-        } else {
-          //add new properties
-          customProperties[
-            RED.util.getMessageProperty(msg, "socketIOId")
-          ] = RED.util.getMessageProperty(msg, "socketIOAddStaticProperties");
-        }
+      const socketIOEvent = RED.util.getMessageProperty(msg, "socketIOEvent");
+      const socketIOId = RED.util.getMessageProperty(msg, "socketIOId");
+      const socketIO = RED.util.getMessageProperty(msg, "socketIO");
+      const socketIOServer = RED.util.getMessageProperty(msg, "socketIOServer");
+
+      if (!socketIOEvent) {
+        node.error("socketIOEvent not set");
+        return;
       }
 
-      switch (RED.util.getMessageProperty(msg, "socketIOEmit")) {
+      if (!socketIOId) {
+        node.error("socketIOId not set");
+        return;
+      }
+
+      switch (socketIOEvent) {
         case "broadcast.emit":
           //Return to all but the caller
-          if (
-            io.sockets.sockets.get(RED.util.getMessageProperty(msg, "socketIOId"))
-          ) {
-            io.sockets.sockets.get(
-              RED.util.getMessageProperty(msg, "socketIOId")
-            ).broadcast.emit(msg.socketIOEvent, msg.payload);
-          }
+          socketIOServer.emit(socketIOEvent, msg.payload);
           break;
         case "emit":
           //Return only to the caller
-          if (
-            io.sockets.sockets.get(RED.util.getMessageProperty(msg, "socketIOId"))
-          ) {
-            io.sockets.sockets.get(
-              RED.util.getMessageProperty(msg, "socketIOId")
-            ).emit(msg.socketIOEvent, msg.payload);
-          }
+          socketIO.emit(socketIOEvent, msg.payload);
           break;
         case "room":
           //emit to all
           if (msg.room) {
-            io.to(msg.room).emit(msg.socketIOEvent, msg.payload);
+            socketIOServer.to(msg.room).emit(socketIOEvent, msg.payload);
           }
           break;
         default:
           //emit to all
-          io.emit(msg.socketIOEvent, msg.payload);
+          socketIOServer.emit(socketIOEvent, msg.payload);
       }
     });
   }
 
+  function socketIoJoinRoom(n) {
+    RED.nodes.createNode(this, n);
+    var node = this;
+    this.name = n.name;
+    this.server = RED.nodes.getNode(n.server);
+
+    node.on("input", function (msg) {
+      const socketIOId = RED.util.getMessageProperty(msg, "socketIOId");
+      const socketIO = RED.util.getMessageProperty(msg, "socketIO");
+      const socketIOServer = RED.util.getMessageProperty(msg, "socketIOServer");
+
+      if (!socketIOId) {
+        node.error("socketIOId not set");
+        return;
+      }
+
+      if (!msg.room) {
+        node.error("room not set");
+        return;
+      }
+
+      socketIO.join(msg.room);
+    });
+  }
 
   RED.nodes.registerType("socketio-config", socketIoConfig);
   RED.nodes.registerType("socketio-in", socketIoIn);
   RED.nodes.registerType("socketio-out", socketIoOut);
+  RED.nodes.registerType("socketio-join-room", socketIoJoinRoom);
 }
