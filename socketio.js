@@ -65,21 +65,18 @@ module.exports = function (RED) {
       node.send(msg);
     }
 
-    function addListener(socket, val, i) {
-      // after add, remove all listeners
-      socket.removeAllListeners(socket, val.v);
-
-      socket.on(val.v, function (msgin) {
-        emitREDMessage(socket, val, msgin);
-      });
-    }
-
     io.on("connection", function (socket) {
       node.rules.forEach(function (val, i) {
-        addListener(socket, val);
-      });
+        socket.removeAllListeners(val.v);
 
-      // emitREDMessage(socket, { v: "connect" }, null);
+        if (val.v === "connect") {
+          emitREDMessage(socket, val, null);
+        } else {
+          socket.on(val.v, function (msgin) {
+            emitREDMessage(socket, val, msgin);
+          });
+        }
+      });
     });
   }
 
