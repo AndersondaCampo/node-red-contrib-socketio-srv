@@ -55,7 +55,7 @@ module.exports = function (RED) {
       { v: "disconnect" }
     ];
 
-    function emitREDMessage(val, msgin) {
+    function emitREDMessage(socket, val, msgin) {
       var msg = {};
       RED.util.setMessageProperty(msg, "payload", msgin, true);
       RED.util.setMessageProperty(msg, "socketIOServer", io, true);
@@ -67,10 +67,10 @@ module.exports = function (RED) {
 
     function addListener(socket, val, i) {
       // after add, remove all listeners
-      socket.removeAllListeners(val.v);
+      socket.removeAllListeners(socket, val.v);
 
       socket.on(val.v, function (msgin) {
-        emitREDMessage(val, msgin, i);
+        emitREDMessage(socket, val, msgin);
       });
     }
 
@@ -79,7 +79,7 @@ module.exports = function (RED) {
         addListener(socket, val);
       });
 
-      emitREDMessage({ v: "connect" }, null);
+      // emitREDMessage(socket, { v: "connect" }, null);
     });
   }
 
