@@ -65,8 +65,6 @@ module.exports = function (RED) {
     node.on("input", function (msg) {
       const socketIOEvent = RED.util.getMessageProperty(msg, "socketIOEvent");
       const socketIOId = RED.util.getMessageProperty(msg, "socketIOId");
-      const socketIO = RED.util.getMessageProperty(msg, "socketIO");
-      const socketIOServer = RED.util.getMessageProperty(msg, "socketIOServer");
 
       if (!socketIOEvent) {
         node.error("socketIOEvent not set");
@@ -78,10 +76,18 @@ module.exports = function (RED) {
         return;
       }
 
+      // get socket by id
+      const socketIO = io.sockets.get(socketIOId);
+
+      if (!socketIO) {
+        node.error("socket not found");
+        return;
+      }
+
       switch (socketIOEvent) {
         case "broadcast.emit":
           //Return to all but the caller
-          socketIOServer.emit(socketIOEvent, msg.payload);
+          io.emit(socketIOEvent, msg.payload);
           break;
         case "emit":
           //Return only to the caller
@@ -90,12 +96,12 @@ module.exports = function (RED) {
         case "room":
           //emit to all
           if (msg.room) {
-            socketIOServer.to(msg.room).emit(socketIOEvent, msg.payload);
+            io.to(msg.room).emit(socketIOEvent, msg.payload);
           }
           break;
         default:
           //emit to all
-          socketIOServer.emit(socketIOEvent, msg.payload);
+          io.emit(socketIOEvent, msg.payload);
       }
     });
   }
@@ -108,7 +114,6 @@ module.exports = function (RED) {
 
     node.on("input", function (msg) {
       const socketIOId = RED.util.getMessageProperty(msg, "socketIOId");
-      const socketIO = RED.util.getMessageProperty(msg, "socketIO");
       const socketIOServer = RED.util.getMessageProperty(msg, "socketIOServer");
 
       if (!socketIOId) {
@@ -118,6 +123,14 @@ module.exports = function (RED) {
 
       if (!msg.room) {
         node.error("room not set");
+        return;
+      }
+
+      // get socket by id
+      const socketIO = socketIOServer.sockets.get(socketIOId);
+
+      if (!socketIO) {
+        node.error("socket not found");
         return;
       }
 
