@@ -52,6 +52,10 @@ module.exports = function (RED) {
         socket.on(val.v, (msgin) => {
           emitREDMessage(socket, val, msgin);
         });
+
+        if (val.v === "connection") {
+          emitREDMessage(socket, val, null);
+        }
       });
     });
   }
@@ -63,45 +67,51 @@ module.exports = function (RED) {
     this.server = RED.nodes.getNode(n.server);
 
     node.on("input", function (msg) {
-      const socketIOEvent = RED.util.getMessageProperty(msg, "socketIOEvent");
-      const socketIOId = RED.util.getMessageProperty(msg, "socketIOId");
+      try {
+        const socketIOEmitType = RED.util.getMessageProperty(msg, "socketIOEmitType");
+        const socketIOEvent = RED.util.getMessageProperty(msg, "socketIOEvent");
+        const socketIOId = RED.util.getMessageProperty(msg, "socketIOId");
 
-      if (!socketIOEvent) {
-        node.error("socketIOEvent not set");
-        return;
-      }
 
-      if (!socketIOId) {
-        node.error("socketIOId not set");
-        return;
-      }
+        if (!socketIOEvent) {
+          node.error("socketIOEvent not set");
+          return;
+        }
 
-      // get socket by id
-      const socketIO = io.sockets.get(socketIOId);
+        if (!socketIOId) {
+          node.error("socketIOId not set");
+          return;
+        }
 
-      if (!socketIO) {
-        node.error("socket not found");
-        return;
-      }
+        // get socket by id
+        const socketIO = io.sockets.get(socketIOId);
 
-      switch (socketIOEvent) {
-        case "broadcast.emit":
-          //Return to all but the caller
-          io.emit(socketIOEvent, msg.payload);
-          break;
-        case "emit":
-          //Return only to the caller
-          socketIO.emit(socketIOEvent, msg.payload);
-          break;
-        case "room":
-          //emit to all
-          if (msg.room) {
-            io.to(msg.room).emit(socketIOEvent, msg.payload);
-          }
-          break;
-        default:
-          //emit to all
-          io.emit(socketIOEvent, msg.payload);
+        if (!socketIO) {
+          node.error("socket not found");
+          return;
+        }
+
+        switch (socketIOEmitType) {
+          case "broadcast.emit":
+            //Return to all but the caller
+            io.emit(socketIOEvent, msg.payload);
+            break;
+          case "emit":
+            //Return only to the caller
+            socketIO.emit(socketIOEvent, msg.payload);
+            break;
+          case "room":
+            //emit to all
+            if (msg.room) {
+              io.to(msg.room).emit(socketIOEvent, msg.payload);
+            }
+            break;
+          default:
+            //emit to all
+            io.emit(socketIOEvent, msg.payload);
+        }
+      } catch (error) {
+        node.error(error);
       }
     });
   }
@@ -114,7 +124,6 @@ module.exports = function (RED) {
 
     node.on("input", function (msg) {
       const socketIOId = RED.util.getMessageProperty(msg, "socketIOId");
-      const socketIOServer = RED.util.getMessageProperty(msg, "socketIOServer");
 
       if (!socketIOId) {
         node.error("socketIOId not set");
@@ -127,7 +136,7 @@ module.exports = function (RED) {
       }
 
       // get socket by id
-      const socketIO = socketIOServer.sockets.get(socketIOId);
+      const socketIO = io.sockets.get(socketIOId);
 
       if (!socketIO) {
         node.error("socket not found");
