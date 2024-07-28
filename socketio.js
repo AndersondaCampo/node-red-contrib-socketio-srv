@@ -47,8 +47,8 @@ module.exports = function (RED) {
       node.send(msg);
     }
 
-    io.on("connection", function (socket) {
-      node.rules.forEach(function (val, i) {
+    io.on("connection", (socket) => {
+      node.rules.forEach((val, i) => {
         socket.on(val.v, (msgin) => {
           emitREDMessage(socket, val, msgin);
         });
