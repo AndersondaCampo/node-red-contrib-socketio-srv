@@ -25,7 +25,7 @@ module.exports = function (RED) {
       : "on port " + this.port;
     node.log("Created server " + bindOn);
 
-    node.on("close", function () {
+    node.on("close", () => {
       io.close();
     });
   }
@@ -36,24 +36,6 @@ module.exports = function (RED) {
     this.name = n.name;
     this.server = RED.nodes.getNode(n.server);
     this.rules = n.rules || [];
-
-    this.specialIOEvent = [
-      // Events emitted by the Manager:
-      { v: "open" },
-      { v: "error" },
-      { v: "close" },
-      { v: "ping" },
-      { v: "packet" },
-      { v: "reconnect_attempt" },
-      { v: "reconnect" },
-      { v: "reconnect_error" },
-      { v: "reconnect_failed" },
-
-      // Events emitted by the Socket:
-      { v: "connect" },
-      { v: "connect_error" },
-      { v: "disconnect" }
-    ];
 
     function emitREDMessage(socket, val, msgin) {
       var msg = {};
@@ -67,15 +49,9 @@ module.exports = function (RED) {
 
     io.on("connection", function (socket) {
       node.rules.forEach(function (val, i) {
-        socket.removeAllListeners(val.v);
-
-        if (val.v === "connect") {
-          emitREDMessage(socket, val, null);
-        } else {
-          socket.on(val.v, function (msgin) {
-            emitREDMessage(socket, val, msgin);
-          });
-        }
+        socket.on(val.v, (msgin) => {
+          emitREDMessage(socket, val, msgin);
+        });
       });
     });
   }
