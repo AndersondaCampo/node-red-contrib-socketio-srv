@@ -83,20 +83,20 @@ module.exports = function (RED) {
           return;
         }
 
-        // get socket by id
-        const socketIO = io.sockets.get(socketIOId);
-
-        if (!socketIO) {
-          node.error("socket not found");
-          return;
-        }
-
         switch (socketIOEmitType) {
           case "broadcast.emit":
             //Return to all but the caller
             io.emit(socketIOEvent, msg.payload);
             break;
           case "emit":
+            // get socket by id
+            const socketIO = io.sockets.sockets.get(socketIOId);
+
+            if (!socketIO) {
+              node.error("socket not found");
+              return;
+            }
+
             //Return only to the caller
             socketIO.emit(socketIOEvent, msg.payload);
             break;
